@@ -1,0 +1,12 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#163c34"><title>À Table — Restaurant Simulator</title><link rel="stylesheet" href="style.css"></head><body>
+<canvas id="world"></canvas><div id="shade"></div>
+<header><div class="brand"><span class="mark">à.</span><div>À TABLE<small>MON PREMIER RESTAURANT</small></div></div><div class="pills"><span id="day">JOUR 1</span><b id="money">900 €</b><button id="pause">Ⅱ</button></div></header>
+<div id="objective"><small>VOTRE PROCHAINE ÉTAPE</small><div id="goal"></div></div>
+<div id="status"><i></i><span id="statusText">À vendre</span></div>
+<div id="orders"></div><div id="crosshair"></div><div id="toast"></div><div id="progress"><div></div></div>
+<div id="context"><small id="target"></small><button id="act">Interagir</button></div>
+<div id="hand">MAINS LIBRES</div><div id="joystick"><span></span></div><div id="lookHint">GLISSER POUR REGARDER</div>
+<nav><button id="build">▦ <span>Aménager</span></button><button id="help">? <span>Guide</span></button></nav>
+<div id="placement" hidden><span id="placeHint">Viser le sol pour placer</span><div><button id="rotate">↻ 90°</button><button id="sell" hidden>Revendre</button><button id="cancel">Annuler</button><button id="confirm">Placer</button></div></div>
+<div id="modal" class="overlay"><section id="panel"></section></div>
+<script src="three.min.js"></script><script src="game.js"></script></body></html>
