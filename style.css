@@ -484,3 +484,32 @@ nav span{
   .marketVisual svg{height:37px}
   .marketFooter{margin-top:5px}
 }
+
+/* =========================================================
+   V1.3 — finition HUD conservée + priorité au rendu 3D
+   ========================================================= */
+/* L'objectif reste lisible mais se fond davantage dans la scène. */
+#objective{opacity:.84}
+
+/* Jour / argent / pause légèrement plus haut. */
+header{top:calc(env(safe-area-inset-top, 0px) + 4px)}
+#dayProgress{top:calc(env(safe-area-inset-top, 0px) + 38px)}
+
+/* Cartes clients encore ~15 % plus compactes. */
+#orders{
+  top:calc(env(safe-area-inset-top, 0px) + 45px);
+  width:92px;
+}
+.order{
+  padding:5px 6px;
+  margin-bottom:3px;
+  border-radius:7px;
+  font-size:7px;
+}
+.order strong{font-size:7px;margin-bottom:2px}
+.order small{font-size:5.8px}
+.order .bar,.bar{height:2px;margin-top:3px}
+
+@media (orientation:landscape) and (max-width:950px){
+  #orders{width:90px}
+}
