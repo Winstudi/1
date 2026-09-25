@@ -513,3 +513,17 @@ header{top:calc(env(safe-area-inset-top, 0px) + 4px)}
 @media (orientation:landscape) and (max-width:950px){
   #orders{width:90px}
 }
+
+
+/* =========================================================
+   V1.6 — finition de rendu (sans modifier le gameplay)
+   ========================================================= */
+#shade{
+  background:
+    radial-gradient(ellipse at 52% 43%,transparent 0%,transparent 56%,rgba(15,39,34,.10) 83%,rgba(10,29,26,.18) 100%),
+    linear-gradient(180deg,rgba(22,48,45,.05) 0%,transparent 24%,transparent 76%,rgba(33,46,36,.08) 100%);
+}
+body{background:#b9d7dc}
+@media (display-mode:standalone),(display-mode:fullscreen){
+  body{background:#173b35}
+}
