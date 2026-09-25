@@ -18,7 +18,17 @@ const mats={};function mat(c){return mats[c]||(mats[c]=new THREE.MeshStandardMat
 function box(g,w,h,d,x,y,z,c){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 function cyl(g,r,h,x,y,z,c,r2=r){const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r,h,12),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 function sphere(g,r,x,y,z,c,seg=10){const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg,Math.max(6,seg-2)),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
-function makeLimb(parent,x,y,z,upperLen,lowerLen,width,upperColor,lowerColor=upperColor){const upper=new THREE.Group();upper.position.set(x,y,z);parent.add(upper);box(upper,width,upperLen,width,0,-upperLen/2,0,upperColor);const lower=new THREE.Group();lower.position.y=-upperLen;upper.add(lower);box(lower,width*.9,lowerLen,width*.9,0,-lowerLen/2,0,lowerColor);return{upper,lower};}
+function ellipsoid(g,rx,ry,rz,x,y,z,c,seg=14){const m=sphere(g,1,x,y,z,c,seg);m.scale.set(rx,ry,rz);return m;}
+function makeLimb(parent,x,y,z,upperLen,lowerLen,width,upperColor,lowerColor=upperColor,kind='arm'){
+  const upper=new THREE.Group();upper.position.set(x,y,z);parent.add(upper);
+  cyl(upper,width,upperLen,0,-upperLen/2,0,upperColor,width*.88);
+  sphere(upper,width*.93,0,-upperLen,0,lowerColor,10);
+  const lower=new THREE.Group();lower.position.y=-upperLen;upper.add(lower);
+  cyl(lower,width*.78,lowerLen,0,-lowerLen/2,0,lowerColor,width*.86);
+  if(kind==='arm'){ellipsoid(lower,width*.88,width*1.05,width*.72,0,-lowerLen-.035,-.01,lowerColor,10);}
+  else{ellipsoid(lower,width*1.08,width*.62,width*1.5,0,-lowerLen-.045,-.06,'#263d36',10);}
+  return{upper,lower};
+}
 function clearGroup(g){while(g.children.length){const c=g.children.pop();c.traverse?.(m=>{if(m.geometry)m.geometry.dispose();if(m.material&&m.material.userData?.temporary)m.material.dispose();});}}
 function foodModel(kind='meal'){
   const g=new THREE.Group();
@@ -114,22 +124,46 @@ function person(c){
 const g=new THREE.Group(),body=new THREE.Group();g.add(body);
 const shirts=['#b37556','#5b8588','#a8945d','#977a99','#587861','#c17e5f','#6b728f','#8a725d'],pants=['#354d50','#32423c','#4f4640','#3f4654'],skins=['#e0b18c','#c98f68','#f0c6a0','#9f694b'],hairs=['#524638','#342d28','#806044','#272a28'];
 const idx=(c.id||1)-1,shirt=shirts[idx%shirts.length],skin=skins[(idx*3)%skins.length],hair=hairs[(idx*5)%hairs.length],pant=pants[(idx*7)%pants.length];
-// Torse légèrement conique, cou et tête low-poly.
-cyl(body,.205,.54,0,1.03,0,shirt,.27);cyl(body,.09,.1,0,1.34,0,skin);const head=sphere(body,.205,0,1.5,0,skin,10);head.scale.set(.96,1.05,.92);
-// Visage minimaliste mais lisible en jeu.
-sphere(body,.018,-.065,1.52,-.185,'#26352f',6);sphere(body,.018,.065,1.52,-.185,'#26352f',6);box(body,.055,.012,.012,0,1.435,-.192,'#8d5f4e');sphere(body,.018,0,1.485,-.205,skin,6);
-// Coiffures variées.
-if(idx%4===0){const h=sphere(body,.212,0,1.61,.015,hair,9);h.scale.y=.58;box(body,.11,.11,.12,-.13,1.55,.08,hair);}
-else if(idx%4===1){cyl(body,.21,.11,0,1.64,.01,hair);box(body,.12,.15,.08,.14,1.55,.08,hair);}
-else if(idx%4===2){box(body,.34,.1,.3,0,1.65,.02,hair);box(body,.07,.22,.08,-.16,1.56,.05,hair);box(body,.07,.2,.08,.16,1.57,.05,hair);}
-else{const h=sphere(body,.215,0,1.61,.01,hair,8);h.scale.set(1,.48,.95);for(let x of [-.13,-.045,.045,.13])sphere(body,.055,x,1.6,.04,hair,7);}
-// Bras et jambes segmentés pour de vraies animations de marche/assis.
-const armL=makeLimb(body,-.27,1.21,0,.28,.26,.095,shirt,skin),armR=makeLimb(body,.27,1.21,0,.28,.26,.095,shirt,skin);
-const legL=makeLimb(body,-.12,.79,0,.42,.41,.12,pant,pant),legR=makeLimb(body,.12,.79,0,.42,.41,.12,pant,pant);
-box(legL.lower,.16,.08,.25,0,-.43,-.06,'#263d36');box(legR.lower,.16,.08,.25,0,-.43,-.06,'#263d36');
+// V1.4 : silhouette plus organique. Le personnage reste low-poly mais n'est plus construit comme un empilement de cubes.
+const torso=new THREE.Group();body.add(torso);
+const chest=ellipsoid(torso,.275,.315,.19,0,1.06,0,shirt,16);
+const waist=ellipsoid(torso,.225,.185,.165,0,.82,.005,shirt,14);
+ellipsoid(torso,.245,.10,.17,0,.72,.015,pant,14);
+// Epaules arrondies et col pour casser la silhouette cylindrique.
+ellipsoid(torso,.105,.105,.105,-.245,1.18,0,shirt,12);ellipsoid(torso,.105,.105,.105,.245,1.18,0,shirt,12);
+cyl(torso,.078,.11,0,1.35,0,skin,.085);
+ellipsoid(torso,.115,.055,.105,0,1.31,0,'#efe6d7',12);
+// Tête légèrement ovale avec mâchoire et oreilles séparées.
+const headRoot=new THREE.Group();headRoot.position.set(0,1.5,0);body.add(headRoot);
+const head=ellipsoid(headRoot,.195,.225,.18,0,0,0,skin,18);
+ellipsoid(headRoot,.16,.085,.145,0,-.13,-.012,skin,14);
+ellipsoid(headRoot,.035,.06,.025,-.19,-.005,.005,skin,10);ellipsoid(headRoot,.035,.06,.025,.19,-.005,.005,skin,10);
+// Yeux, sourcils, nez et bouche sobres mais plus naturels.
+ellipsoid(headRoot,.023,.016,.012,-.064,.035,-.172,'#eef1e4',10);ellipsoid(headRoot,.023,.016,.012,.064,.035,-.172,'#eef1e4',10);
+sphere(headRoot,.010,-.064,.034,-.184,'#26352f',8);sphere(headRoot,.010,.064,.034,-.184,'#26352f',8);
+box(headRoot,.06,.012,.012,-.064,.075,-.172,hair);box(headRoot,.06,.012,.012,.064,.075,-.172,hair);
+ellipsoid(headRoot,.024,.038,.026,0,-.005,-.184,skin,10);
+ellipsoid(headRoot,.05,.012,.012,0,-.092,-.175,'#8d5f4e',10);
+// Quatre coiffures composées surtout de volumes arrondis.
+if(idx%4===0){
+  const h=ellipsoid(headRoot,.205,.115,.188,0,.115,.012,hair,16);h.rotation.x=-.06;
+  ellipsoid(headRoot,.055,.10,.035,-.17,.055,.025,hair,10);ellipsoid(headRoot,.055,.10,.035,.17,.055,.025,hair,10);
+}else if(idx%4===1){
+  for(const [x,y,z,r] of [[-.13,.13,.01,.085],[-.045,.16,0,.09],[.05,.16,.005,.09],[.14,.125,.012,.08],[-.16,.06,.015,.07],[.16,.055,.018,.07]])sphere(headRoot,r,x,y,z,hair,10);
+}else if(idx%4===2){
+  ellipsoid(headRoot,.205,.105,.19,0,.13,.018,hair,15);
+  ellipsoid(headRoot,.10,.065,.05,-.09,.075,-.145,hair,12);ellipsoid(headRoot,.075,.055,.045,.08,.09,-.155,hair,12);
+}else{
+  ellipsoid(headRoot,.21,.145,.19,0,.075,.025,hair,16);
+  ellipsoid(headRoot,.06,.15,.045,-.17,-.015,.035,hair,10);ellipsoid(headRoot,.06,.15,.045,.17,-.015,.035,hair,10);
+}
+// Membres segmentés et arrondis : épaules/coudes/genoux restent animables comme avant.
+const armL=makeLimb(torso,-.27,1.18,0,.255,.27,.082,shirt,skin,'arm'),armR=makeLimb(torso,.27,1.18,0,.255,.27,.082,shirt,skin,'arm');
+const legL=makeLimb(body,-.115,.73,0,.39,.39,.105,pant,pant,'leg'),legR=makeLimb(body,.115,.73,0,.39,.39,.105,pant,pant,'leg');
 // Assiette/burger posé devant le client pendant le repas.
-const meal=foodModel('meal');meal.position.set(0,.84,-.48);meal.scale.set(.75,.75,.75);meal.visible=false;g.add(meal);
-g.userData={kind:'client',id:c.id,body,head,armL,armR,legL,legR,meal,mealBurger:meal.userData.burger,pose:0};scene.add(g);return g;}
+const meal=foodModel('meal');meal.position.set(0,.84,-.48);meal.scale.set(.72,.72,.72);meal.visible=false;g.add(meal);
+g.userData={kind:'client',id:c.id,body,torso,head:headRoot,armL,armR,legL,legR,meal,mealBurger:meal.userData.burger,pose:0};scene.add(g);return g;}
+
 function dims(f,pad=0){let d=catalog[f.type],swap=Math.abs(Math.sin(f.rot||0))>.5;return {w:(swap?d.d:d.w)/2+pad,d:(swap?d.w:d.d)/2+pad};}
 function insideFurniture(x,z,f,pad=.22){const d=dims(f,pad);return Math.abs(x-f.x)<d.w&&Math.abs(z-f.z)<d.d;}
 function blocked(x,z,ignore=null,list=S.furniture,pad=.23){if(x< -4.65||x>4.65||z< -5.65||z>9.5)return true;if(Math.abs(z-4)<.35&&Math.abs(x)>1.1)return true;if(!S.owned&&z<4.4)return true;return list.some(f=>f.id!==ignore&&insideFurniture(x,z,f,pad));}
@@ -142,7 +176,7 @@ function save(){if(resetting)return;S.pos={x:camera.position.x,z:camera.position
 function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;toastTime=3.5;}
 function modal(html,mode=''){paused=true;joy.x=joy.y=0;Object.keys(keys).forEach(k=>keys[k]=false);$('modal').hidden=false;const panel=$('panel');panel.className=mode;panel.innerHTML=html;document.exitPointerLock?.();}
 function resume(){paused=false;$('modal').hidden=true;if(!idleHintStarted){idleHintStarted=true;idleHintUntil=performance.now()+6500;}}
-function showWelcome(){modal(`<div class="eyebrow">SIMULATEUR DE RESTAURANT · V1.3</div><h1>Une adresse.<br>Votre histoire.</h1><p>Un local vide, quelques économies et votre premier service à inventer.</p><div class="tags"><span>3D · Première personne</span><span>Sauvegarde locale</span></div><p><b>Déplacez-vous à gauche.</b> Glissez à droite pour regarder. Visez un objet, puis touchez le bouton d’action.</p><button class="primary" id="start">${loaded?'Reprendre mon restaurant':'Commencer l’aventure'}</button><button class="secondary" id="welcomeHelp">Voir les commandes</button>`);$('start').onclick=()=>{resume();if(!storageOK)toast('Sauvegarde indisponible dans ce navigateur.');};$('welcomeHelp').onclick=showHelp;}
+function showWelcome(){modal(`<div class="eyebrow">SIMULATEUR DE RESTAURANT · V1.4</div><h1>Une adresse.<br>Votre histoire.</h1><p>Un local vide, quelques économies et votre premier service à inventer.</p><div class="tags"><span>3D · Première personne</span><span>Sauvegarde locale</span></div><p><b>Déplacez-vous à gauche.</b> Glissez à droite pour regarder. Visez un objet, puis touchez le bouton d’action.</p><button class="primary" id="start">${loaded?'Reprendre mon restaurant':'Commencer l’aventure'}</button><button class="secondary" id="welcomeHelp">Voir les commandes</button>`);$('start').onclick=()=>{resume();if(!storageOK)toast('Sauvegarde indisponible dans ce navigateur.');};$('welcomeHelp').onclick=showHelp;}
 function showHelp(){modal(`<div class="eyebrow">LE CARNET DU CHEF</div><h2>Votre premier service</h2><ol class="steps"><li>Achetez le local : <b>250 €</b>, sur la pancarte devant.</li><li>Entrez, puis ouvrez <b>Aménager</b>. Achetez chaque équipement et deux chaises.</li><li>Placez les chaises près de la table. Laissez des passages et la porte libres.</li><li>Ouvrez avec la pancarte. Prenez la commande du client.</li><li>Réfrigérateur → ingrédients. Plan de travail → préparer. Plaque → cuire. Plan de travail → dresser.</li><li>Servez le client, puis encaissez à la caisse après son repas.</li></ol><p>Un burger : <b>18 € + pourboire</b>. 6 portions offertes ; réassort de 6 portions à 18 €. Un service dure 4 minutes, puis finit après le départ des clients.</p><p>Mobile : joystick à gauche, vue à droite. Ordinateur : ZQSD / WASD / flèches, glisser la souris pour regarder, E pour agir, R pour pivoter. La pause arrête les clients et la cuisson.</p><button class="primary" id="back">C’est parti</button>`);$('back').onclick=resume;}
 function showShop(){if(!S.owned)return toast('Achetez d’abord le local sur la pancarte.');if(S.open||S.clients.length||S.closing)return toast('Aménagez entre deux journées, sans client.');if(job)return;buildMode=true;const st=setupState();const req=[['table',1],['chair',2],['till',1],['fridge',1],['prep',1],['stove',1]],done=req.filter(([t,n])=>st.counts[t]>=n).length;modal(`<div class="marketHead"><div><div class="eyebrow">MARKET</div><h2>Aménagement</h2></div><div class="marketMoney">${S.money} €</div></div><div class="marketStatus ${done===6?'ready':''}">${done===6?'✓ Restaurant prêt':done+'/6 équipements essentiels'}</div><div class="marketShop">${Object.entries(catalog).map(([type,d])=>{const count=S.furniture.filter(f=>f.type===type).length;return `<button class="marketItem" data-buy="${type}" ${S.money<d.price?'disabled':''}><span class="marketVisual">${marketIcon(type)}</span><span class="marketInfo"><b>${d.name}</b><small>${count} installé${count>1?'s':''}</small></span><em>${d.price} €</em></button>`;}).join('')}</div><div class="marketFooter"><button class="marketMove" id="arrange">Déplacer</button><button class="marketClose" id="shopClose">Fermer</button></div>`,'marketPanel');document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>beginPlacement(b.dataset.buy));$('arrange').onclick=resume;$('shopClose').onclick=()=>{buildMode=false;resume();};}
 function beginPlacement(type,id=null){const f=S.furniture.find(f=>f.id===id);placing={type,id,rot:f?.rot||0,x:f?.x||0,z:f?.z||0,valid:false};if(id)furnitureMeshes.get(id).visible=false;ghost=furnitureMesh({...placing,id:-1});ghost.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.transparent=true;m.material.opacity=.5;}});scene.add(ghost);$('placement').hidden=false;$('sell').hidden=!id;resume();}
@@ -179,15 +213,16 @@ function syncHeld(){const key=S.hand+'|'+(job?.visual||'');if(lastHeld===key)ret
 held.visible=false;
 let previous=performance.now();function frame(now){requestAnimationFrame(frame);let dt=Math.min((now-previous)/1000,.05);previous=now;if(!paused&&!document.hidden){let forward=(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y,side=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.KeyQ||keys.ArrowLeft?1:0)+joy.x;let n=Math.max(1,Math.hypot(forward,side));forward/=n;side/=n;let dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*dt*2.6,dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*dt*2.6;if(!blocked(camera.position.x+dx,camera.position.z))camera.position.x+=dx;if(!blocked(camera.position.x,camera.position.z+dz))camera.position.z+=dz;camera.rotation.set(pitch,yaw,0);if(placing)updatePlacement();else pick();if(job){job.left-=dt;$('progress').firstElementChild.style.width=(1-job.left/job.total)*100+'%';if(job.left<=0){job.done();job=null;$('progress').style.display='none';save();}}if(S.cook>0){S.cook=Math.max(0,S.cook-dt);if(!S.cook){S.cookReady=true;toast('Le burger est cuit !');save();}}updateClients(dt);autoSave+=dt;if(autoSave>4){save();autoSave=0;}toastTime-=dt;if(toastTime<0)$('toast').style.opacity=0;}
 for(const c of S.clients){let g=clientMeshes.get(c.id);if(!g){g=person(c);clientMeshes.set(c.id,g);}const u=g.userData,seated=['order','wait','eat','pay'].includes(c.state),moving=['walk','leave'].includes(c.state),phase=now*.008+c.id*.9,swing=Math.sin(phase);
-  g.position.set(c.x,moving?Math.abs(Math.sin(phase*2))*.022:0,c.z);u.pose+=( (seated?1:0)-u.pose)*Math.min(1,dt*7);u.body.position.y=-.22*u.pose;u.body.rotation.z=moving?swing*.022:0;
-  if(moving){u.armL.upper.rotation.x=swing*.58;u.armR.upper.rotation.x=-swing*.58;u.armL.lower.rotation.x=Math.max(0,-swing)*.22;u.armR.lower.rotation.x=Math.max(0,swing)*.22;u.legL.upper.rotation.x=-swing*.5;u.legR.upper.rotation.x=swing*.5;u.legL.lower.rotation.x=Math.max(0,swing)*.28;u.legR.lower.rotation.x=Math.max(0,-swing)*.28;u.head.rotation.y=swing*.035;}
-  else if(seated){u.legL.upper.rotation.x=1.2;u.legR.upper.rotation.x=1.2;u.legL.lower.rotation.x=-1.18;u.legR.lower.rotation.x=-1.18;const eat=c.state==='eat',waitBob=Math.sin(now*.004+c.id)*.035;u.armL.upper.rotation.x=eat ? .38+Math.sin(now*.011+c.id)*.28 : .06+waitBob;u.armR.upper.rotation.x=eat ? .46-Math.sin(now*.011+c.id)*.24 : .02-waitBob;u.armL.lower.rotation.x=eat?-.65:0;u.armR.lower.rotation.x=eat?-.72:0;u.head.rotation.y=Math.sin(now*.0025+c.id)*.05;}
-  else{u.armL.upper.rotation.x=u.armR.upper.rotation.x=u.armL.lower.rotation.x=u.armR.lower.rotation.x=0;u.legL.upper.rotation.x=u.legR.upper.rotation.x=u.legL.lower.rotation.x=u.legR.lower.rotation.x=0;}
+  g.position.set(c.x,moving?Math.abs(Math.sin(phase*2))*.018:0,c.z);u.pose+=( (seated?1:0)-u.pose)*Math.min(1,dt*7);u.body.position.y=-.20*u.pose;u.body.rotation.z=moving?swing*.014:0;
+  const breathe=Math.sin(now*.0022+c.id*.7);u.torso.scale.y=1+breathe*.006;u.torso.rotation.z=moving?-swing*.018:breathe*.004;
+  if(moving){u.torso.rotation.x=.025;u.armL.upper.rotation.x=swing*.5;u.armR.upper.rotation.x=-swing*.5;u.armL.lower.rotation.x=Math.max(0,-swing)*.18;u.armR.lower.rotation.x=Math.max(0,swing)*.18;u.legL.upper.rotation.x=-swing*.46;u.legR.upper.rotation.x=swing*.46;u.legL.lower.rotation.x=Math.max(0,swing)*.25;u.legR.lower.rotation.x=Math.max(0,-swing)*.25;u.head.rotation.y=swing*.028;u.head.rotation.x=-.01;}
+  else if(seated){u.legL.upper.rotation.x=1.18;u.legR.upper.rotation.x=1.18;u.legL.lower.rotation.x=-1.15;u.legR.lower.rotation.x=-1.15;const eat=c.state==='eat',waitBob=Math.sin(now*.004+c.id)*.028;u.torso.rotation.x=eat?.08:.025;u.armL.upper.rotation.x=eat ? .34+Math.sin(now*.011+c.id)*.24 : .04+waitBob;u.armR.upper.rotation.x=eat ? .42-Math.sin(now*.011+c.id)*.21 : .01-waitBob;u.armL.lower.rotation.x=eat?-.62:0;u.armR.lower.rotation.x=eat?-.68:0;u.head.rotation.y=Math.sin(now*.0025+c.id)*.04;u.head.rotation.x=eat?.04:0;}
+  else{u.torso.rotation.x=0;u.armL.upper.rotation.x=u.armR.upper.rotation.x=u.armL.lower.rotation.x=u.armR.lower.rotation.x=0;u.legL.upper.rotation.x=u.legR.upper.rotation.x=u.legL.lower.rotation.x=u.legR.lower.rotation.x=0;u.head.rotation.x=u.head.rotation.y=0;}
   u.meal.visible=c.state==='eat'||c.state==='pay';if(u.mealBurger){u.mealBurger.visible=c.state==='eat';if(c.state==='eat'){const k=Math.max(.25,1-c.timer/12);u.mealBurger.scale.set(k,k,k);}else u.mealBurger.scale.set(1,1,1);}
   const chair=S.furniture.find(f=>f.id===c.chair);g.rotation.y=moving?c.angle||0:chair?.rot||0;}
 syncFoodVisuals();syncHeld();held.rotation.z=Math.sin(now*.003)*.02;held.position.y=-.42+Math.sin(now*.004)*.008;uiTime+=dt;if(uiTime>.15){ui();uiTime=0;}renderer.render(scene,camera);}
 $('act').onclick=interact;$('build').onclick=showShop;$('rotate').onclick=()=>{if(placing)placing.rot=(placing.rot+Math.PI/2)%(Math.PI*2);};$('cancel').onclick=endPlacement;$('sell').onclick=()=>{if(!placing?.id)return;const id=placing.id,price=catalog[placing.type].price;endPlacement();S.furniture=S.furniture.filter(f=>f.id!==id);S.money+=price;syncFurniture();save();toast('Meuble revendu · +'+price+' €');};$('confirm').onclick=commitPlacement;
-$('pause').onclick=()=>{save();modal(`<div class="eyebrow">PRENEZ VOTRE TEMPS</div><h2>Pause café.</h2><p>${storageOK?'Votre progression est sauvegardée sur cet appareil.':'La sauvegarde est indisponible dans ce navigateur.'}</p><button class="primary" id="resume">Reprendre</button><button class="secondary" id="instructions">Guide & recette</button><button class="secondary" id="reset">Nouvelle partie</button>`);$('resume').onclick=resume;$('instructions').onclick=showHelp;$('reset').onclick=()=>{modal('<h2>Repartir de zéro ?</h2><p>Votre sauvegarde actuelle sera effacée sur cet appareil.</p><button class="primary" id="reallyReset">Effacer et recommencer</button><button class="secondary" id="keep">Garder ma partie</button>');$('keep').onclick=resume;$('reallyReset').onclick=()=>{resetting=true;paused=true;try{localStorage.removeItem(KEY);}catch{}const u=new URL(location.href);u.searchParams.set('v','1.3');u.searchParams.set('reset',Date.now().toString());location.replace(u.toString());};};};
+$('pause').onclick=()=>{save();modal(`<div class="eyebrow">PRENEZ VOTRE TEMPS</div><h2>Pause café.</h2><p>${storageOK?'Votre progression est sauvegardée sur cet appareil.':'La sauvegarde est indisponible dans ce navigateur.'}</p><button class="primary" id="resume">Reprendre</button><button class="secondary" id="instructions">Guide & recette</button><button class="secondary" id="reset">Nouvelle partie</button>`);$('resume').onclick=resume;$('instructions').onclick=showHelp;$('reset').onclick=()=>{modal('<h2>Repartir de zéro ?</h2><p>Votre sauvegarde actuelle sera effacée sur cet appareil.</p><button class="primary" id="reallyReset">Effacer et recommencer</button><button class="secondary" id="keep">Garder ma partie</button>');$('keep').onclick=resume;$('reallyReset').onclick=()=>{resetting=true;paused=true;try{localStorage.removeItem(KEY);}catch{}const u=new URL(location.href);u.searchParams.set('v','1.4');u.searchParams.set('reset',Date.now().toString());location.replace(u.toString());};};};
 const stick=$('joystick');let joyId=null;function stickMove(e){const r=stick.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,limit=Math.max(18,r.width*.46),n=Math.max(1,Math.hypot(x,y)/limit),travel=Math.max(14,r.width*.32);joy.x=x/n/limit;joy.y=y/n/limit;stick.firstElementChild.style.transform=`translate(${joy.x*travel}px,${joy.y*travel}px)`;}
 stick.onpointerdown=e=>{if(paused)return;joyId=e.pointerId;stick.setPointerCapture(e.pointerId);stickMove(e);};stick.onpointermove=e=>{if(e.pointerId===joyId)stickMove(e);};function clearStick(){joyId=null;joy.x=joy.y=0;stick.firstElementChild.style.transform='';}stick.onpointerup=clearStick;stick.onpointercancel=clearStick;
 $('world').onpointerdown=e=>{if(paused)return;pointerDown={id:e.pointerId,x:e.clientX,y:e.clientY};$('world').setPointerCapture(e.pointerId);};$('world').onpointermove=e=>{if(!pointerDown||pointerDown.id!==e.pointerId||paused)return;const dx=e.clientX-pointerDown.x,dy=e.clientY-pointerDown.y;yaw-=dx*.004;pitch=Math.max(-1.2,Math.min(1.15,pitch-dy*.004));pointerDown.x=e.clientX;pointerDown.y=e.clientY;};$('world').onpointerup=$('world').onpointercancel=()=>pointerDown=null;
