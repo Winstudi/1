@@ -1,4 +1,4 @@
-# À Table — Prototype V1
+# À Table — Prototype V1.1
 
 Un jeu 3D à la première personne : acheter, aménager et tenir son premier restaurant.
 
@@ -9,6 +9,16 @@ Sur ordinateur : décompresser tout le ZIP, puis ouvrir `index.html` avec un nav
 Sur iPhone : les fichiers doivent être servis par un hébergement web statique, puis ouverts dans Safari. L’aperçu de l’app Fichiers ne constitue pas un navigateur de jeu. Cette livraison contient les sources web, pas une application iOS signée ni un site déjà publié.
 
 Pour un essai sur réseau local depuis un ordinateur avec Python : lancer `python3 -m http.server 8080` dans le dossier, puis ouvrir `http://ADRESSE-IP-DE-L-ORDINATEUR:8080` sur l’iPhone connecté au même Wi-Fi.
+
+## Nouveautés V1.1
+
+- interface mobile allégée : le gros bouton central disparaît quand aucun objet n’est visé ;
+- viseur qui réagit quand un objet interactif est ciblé ;
+- barre de progression discrète pendant le service ;
+- atelier avec checklist claire de l’équipement nécessaire avant ouverture ;
+- objectif de départ plus précis sur les meubles encore manquants ;
+- clients avec prénoms, davantage de variations visuelles et une légère animation de marche ;
+- indication de cuisson ajoutée à l’état du restaurant.
 
 ## Commandes
 
