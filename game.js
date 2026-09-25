@@ -9,12 +9,37 @@ function marketIcon(type){const common='viewBox="0 0 120 82" aria-hidden="true"'
 const fresh=()=>({version:1,money:900,owned:false,day:1,open:false,closing:false,elapsed:0,spawn:2,stock:6,hand:'',furniture:[],clients:[],nextId:1,served:0,lost:0,revenue:0,expense:0,totalServed:0,rating:100,cook:0,cookReady:false,pos:{x:1.9,z:8,yaw:0,pitch:-.21}});
 let S=fresh(),loaded=false,storageOK=true,resetting=false;try{const raw=JSON.parse(localStorage.getItem(KEY));if(raw?.version===1&&Array.isArray(raw.furniture)&&Number.isFinite(raw.money)){S=raw;loaded=true;}}catch(e){storageOK=false;}
 let paused=true,buildMode=false,placing=null,ghost=null,target=null,job=null,toastTime=0,autoSave=0,uiTime=0,yaw=S.pos.yaw,pitch=S.pos.pitch,idleHintUntil=0,idleHintStarted=false;const keys={},joy={x:0,y:0};
-const scene=new THREE.Scene();scene.background=new THREE.Color('#b7d5d1');scene.fog=new THREE.Fog('#b7d5d1',23,65);
-const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.06,80);camera.rotation.order='YXZ';camera.position.set(S.pos.x,1.65,S.pos.z);camera.rotation.set(pitch,yaw,0);
+// V1.5 — rendu général : contraste doux, lumière chaude et caméra moins grand-angle.
+const scene=new THREE.Scene();scene.background=new THREE.Color('#bfd8d4');scene.fog=new THREE.Fog('#c5d4cb',26,62);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.06,80);camera.rotation.order='YXZ';camera.position.set(S.pos.x,1.63,S.pos.z);camera.rotation.set(pitch,yaw,0);
 let renderer;try{renderer=new THREE.WebGLRenderer({canvas:$('world'),antialias:true,powerPreference:'high-performance'});}catch(e){$('panel').innerHTML='<h2>La 3D est indisponible</h2><p>Ouvre ce jeu dans Safari ou Chrome avec WebGL activé.</p>';throw e;}
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.06;
-scene.add(new THREE.HemisphereLight('#fff5d9','#769891',2.2));const sun=new THREE.DirectionalLight('#fff2d2',2.6);sun.position.set(-6,12,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-12,right:12,top:12,bottom:-12});sun.shadow.bias=-.002;scene.add(sun);
-const mats={};function mat(c){return mats[c]||(mats[c]=new THREE.MeshStandardMaterial({color:c,roughness:.8}));}
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.65));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
+const hemi=new THREE.HemisphereLight('#fff1d4','#526d65',1.35);scene.add(hemi);
+const ambient=new THREE.AmbientLight('#fff2dc',.24);scene.add(ambient);
+const sun=new THREE.DirectionalLight('#ffdfaa',3.15);sun.position.set(-6,11,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-11,right:11,top:11,bottom:-11,near:.5,far:28});sun.shadow.bias=-.0007;sun.shadow.normalBias=.025;scene.add(sun);
+const windowFill=new THREE.DirectionalLight('#c7e2e1',.58);windowFill.position.set(4,4,10);scene.add(windowFill);
+const mats={};
+const materialProfiles={
+  '#bd8e59':{roughness:.56,metalness:0},'#9d744c':{roughness:.62,metalness:0},'#c89b67':{roughness:.64,metalness:0},'#936e49':{roughness:.68,metalness:0},
+  '#536b62':{roughness:.46,metalness:.28},'#334b43':{roughness:.42,metalness:.38},'#263d36':{roughness:.38,metalness:.46},'#384d46':{roughness:.4,metalness:.4},'#182f2a':{roughness:.34,metalness:.45},
+  '#cbd8cf':{roughness:.38,metalness:.08},'#d8e3d5':{roughness:.4,metalness:.06},'#eef1df':{roughness:.52,metalness:0},'#efe7d3':{roughness:.7,metalness:0},
+  '#719478':{roughness:.72,metalness:0},'#789581':{roughness:.7,metalness:0},'#385d4b':{roughness:.78,metalness:0},'#365d4b':{roughness:.76,metalness:0},
+  '#e3d4ba':{roughness:.9,metalness:0},'#ecdfc8':{roughness:.88,metalness:0},'#ebdfc6':{roughness:.94,metalness:0},'#bac8a6':{roughness:.92,metalness:0}
+};
+function mat(c){if(mats[c])return mats[c];const p=materialProfiles[c]||{roughness:.8,metalness:0};const m=new THREE.MeshStandardMaterial({color:c,roughness:p.roughness,metalness:p.metalness});m.dithering=true;mats[c]=m;return m;}
+function proceduralTexture(base,accent,mode='plaster'){
+  const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,128,128);
+  let seed=9173;const rnd=()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
+  if(mode==='tile'){for(let i=0;i<300;i++){const a=.015+rnd()*.04;x.fillStyle=`rgba(70,60,45,${a})`;const r=.25+rnd()*.7;x.fillRect(rnd()*128,rnd()*128,r,r);}for(let i=0;i<6;i++){x.strokeStyle=`rgba(255,255,255,${.018+rnd()*.025})`;x.lineWidth=.5;x.beginPath();x.moveTo(0,rnd()*128);x.lineTo(128,rnd()*128);x.stroke();}}
+  else if(mode==='wood'){for(let y=6;y<128;y+=7){x.strokeStyle=`rgba(70,38,18,${.025+rnd()*.04})`;x.lineWidth=.7;x.beginPath();x.moveTo(0,y+rnd()*3);x.bezierCurveTo(35,y-2+rnd()*6,90,y+3-rnd()*6,128,y+rnd()*3);x.stroke();}}
+  else{for(let i=0;i<380;i++){const a=.012+rnd()*.025;x.fillStyle=`rgba(65,75,63,${a})`;x.fillRect(rnd()*128,rnd()*128,.45+rnd()*.65,.45+rnd()*.65);}}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy?.()||1);return t;
+}
+const wallWarmMat=new THREE.MeshStandardMaterial({map:proceduralTexture('#ece3cf','#d6c9ae','plaster'),roughness:.95,metalness:0});
+const wallGreenMat=new THREE.MeshStandardMaterial({map:proceduralTexture('#557756','#3d6148','plaster'),roughness:.92,metalness:0});
+const tileWarmA=new THREE.MeshStandardMaterial({map:proceduralTexture('#e5d6bc','#c8b79a','tile'),roughness:.88,metalness:0});
+const tileWarmB=new THREE.MeshStandardMaterial({map:proceduralTexture('#efe1ca','#d6c3a5','tile'),roughness:.9,metalness:0});
+const ceilingMat=new THREE.MeshStandardMaterial({color:'#eee6d6',roughness:.96,metalness:0});
 function box(g,w,h,d,x,y,z,c){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 function cyl(g,r,h,x,y,z,c,r2=r){const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r,h,12),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 function sphere(g,r,x,y,z,c,seg=10){const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg,Math.max(6,seg-2)),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
@@ -62,14 +87,27 @@ function foodModel(kind='meal'){
 }
 function label(g,text,x,y,z,w=2,h=.5,bg='#21483c',fg='#f7f0d5'){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle=bg;ctx.fillRect(0,0,512,128);ctx.fillStyle=fg;ctx.font='bold 48px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,66);const tx=new THREE.CanvasTexture(c);const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));m.position.set(x,y,z);g.add(m);return m;}
 const world=new THREE.Group();scene.add(world);
+// Extérieur conservé, avec des surfaces un peu moins uniformes.
 box(world,80,.2,80,0,-.2,0,'#87a89b');box(world,24,.1,7,0,-.06,8,'#cecfc0');box(world,30,.04,4,0,-.08,13,'#7c8c87');for(let x=-12;x<13;x+=4)box(world,1.5,.02,.09,x,-.05,13,'#e9e2c7');
-box(world,10,.16,10,0,-.09,-1,'#dbc5a0');box(world,10.3,.18,10.3,0,3.65,-1,'#eee4cd');for(let x=-5;x<5;x+=1)for(let z=-6;z<4;z+=1)box(world,.985,.02,.985,x+.5,.005,z+.5,(Math.round(x+z)%2)?'#e3d4ba':'#ecdfc8');
-box(world,.22,3.6,10,-5,1.8,-1,'#ebdfc6');box(world,.22,3.6,10,5,1.8,-1,'#ebdfc6');box(world,10,3.6,.2,0,1.8,-6,'#bac8a6');
-box(world,3.6,1.1,.2,-3.2,.55,4,'#385d4b');box(world,3.6,1.1,.2,3.2,.55,4,'#385d4b');box(world,10,.7,.28,0,3.3,4,'#365d4b');for(let x of [-5,-1.4,1.4,5])box(world,.15,3.3,.3,x,1.65,4,'#365d4b');
-const glassmat=new THREE.MeshStandardMaterial({color:'#bde4d9',transparent:true,opacity:.16,roughness:.2});for(let x of [-3.2,3.2]){const m=box(world,3.4,1.8,.04,x,2,4,'#dcebe0');m.material=glassmat;box(world,3.6,.08,.4,x,1.13,4,'#eee7cf');}
+// Sol, plafond et murs : mêmes volumes, nouveaux matériaux seulement.
+const floorBase=box(world,10,.16,10,0,-.09,-1,'#dbc5a0');floorBase.material=tileWarmA;
+const ceiling=box(world,10.3,.18,10.3,0,3.65,-1,'#eee4cd');ceiling.material=ceilingMat;
+for(let x=-5;x<5;x+=1)for(let z=-6;z<4;z+=1){const tile=box(world,.985,.022,.985,x+.5,.006,z+.5,'#ecdfc8');tile.material=(Math.round(x+z)%2)?tileWarmA:tileWarmB;tile.receiveShadow=true;}
+const wallL=box(world,.22,3.6,10,-5,1.8,-1,'#ebdfc6');wallL.material=wallWarmMat;
+const wallR=box(world,.22,3.6,10,5,1.8,-1,'#ebdfc6');wallR.material=wallWarmMat;
+const wallBack=box(world,10,3.6,.2,0,1.8,-6,'#bac8a6');wallBack.material=wallWarmMat;
+// Soubassement vert légèrement texturé, plus profond que l'aplat précédent.
+for(const spec of [[3.6,1.1,.2,-3.2,.55,4],[3.6,1.1,.2,3.2,.55,4]]){const m=box(world,...spec,'#385d4b');m.material=wallGreenMat;}
+const lintel=box(world,10,.7,.28,0,3.3,4,'#365d4b');lintel.material=mat('#365d4b');
+for(let x of [-5,-1.4,1.4,5])box(world,.15,3.3,.3,x,1.65,4,'#365d4b');
+// Verre plus crédible : un peu de transmission et moins d'opacité laiteuse.
+const glassmat=new THREE.MeshPhysicalMaterial({color:'#cce8e4',transparent:true,opacity:.30,roughness:.08,metalness:0,transmission:.28,thickness:.025,ior:1.45,side:THREE.DoubleSide});
+for(let x of [-3.2,3.2]){const m=box(world,3.4,1.8,.035,x,2,4,'#dcebe0');m.material=glassmat;m.castShadow=false;box(world,3.6,.08,.4,x,1.13,4,'#eee7cf');}
 box(world,10.5,.2,1.3,0,3.75,4.2,'#e5ba7c');for(let x=-5;x<5;x+=.6)box(world,.3,.03,1.3,x,3.87,4.2,'#f8eacc');label(world,'À  T A B L E',0,3.32,4.17,3,.45);
-for(let z of [-5.85]){box(world,9.8,.12,.12,0,1.05,z,'#6c886d');box(world,9.8,.7,.08,0,.4,z,'#75906f');}for(let x of [-4.86,4.86])box(world,.1,.8,9.7,x,.4,-1,'#75906f');
-for(let x of [-2.7,2.7]){cyl(world,.04,.5,x,3.1,-2,'#2f4941');cyl(world,.5,.2,x,2.8,-2,'#d6a25d',.18);const l=new THREE.PointLight('#ffe0a7',7,7,2);l.position.set(x,2.6,-2);scene.add(l);}
+for(let z of [-5.85]){const rail=box(world,9.8,.12,.12,0,1.05,z,'#6c886d');rail.material=mat('#6c886d');const dado=box(world,9.8,.7,.08,0,.4,z,'#75906f');dado.material=wallGreenMat;}
+for(let x of [-4.86,4.86]){const dado=box(world,.1,.8,9.7,x,.4,-1,'#75906f');dado.material=wallGreenMat;}
+// Suspensions : lumière plus chaude, plus localisée et moins "plate".
+for(let x of [-2.7,2.7]){cyl(world,.04,.5,x,3.1,-2,'#2f4941');cyl(world,.5,.2,x,2.8,-2,'#d6a25d',.18);const bulb=sphere(world,.17,x,2.70,-2,'#ffe9b8',12);bulb.material=new THREE.MeshBasicMaterial({color:'#ffe8a8'});const l=new THREE.PointLight('#ffd18b',4.5,5.2,2);l.position.set(x,2.55,-2);scene.add(l);}
 for(let x of [-5.8,5.8]){cyl(world,.38,.7,x,.35,4.5,'#b97955',.5);for(let i=0;i<4;i++){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.5,0),mat(i%2?'#719369':'#547b59'));m.position.set(x+Math.sin(i)*.2,.95+i*.2,4.5+Math.cos(i)*.15);world.add(m);}}
 for(let x of [-11,11]){box(world,6,7,8,x,3.5,-2,'#c8bdab');box(world,6,.2,8.5,x,7,-2,'#71837b');for(let y of [2,4.5])for(let a of [-1.5,1.5])box(world,1.1,1.6,.05,x+a,y,2.05,'#7d9e98');}
 // V1.3 : petits détails architecturaux légers pour casser l'effet "pièce vide".
@@ -176,7 +214,7 @@ function save(){if(resetting)return;S.pos={x:camera.position.x,z:camera.position
 function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;toastTime=3.5;}
 function modal(html,mode=''){paused=true;joy.x=joy.y=0;Object.keys(keys).forEach(k=>keys[k]=false);$('modal').hidden=false;const panel=$('panel');panel.className=mode;panel.innerHTML=html;document.exitPointerLock?.();}
 function resume(){paused=false;$('modal').hidden=true;if(!idleHintStarted){idleHintStarted=true;idleHintUntil=performance.now()+6500;}}
-function showWelcome(){modal(`<div class="eyebrow">SIMULATEUR DE RESTAURANT · V1.4</div><h1>Une adresse.<br>Votre histoire.</h1><p>Un local vide, quelques économies et votre premier service à inventer.</p><div class="tags"><span>3D · Première personne</span><span>Sauvegarde locale</span></div><p><b>Déplacez-vous à gauche.</b> Glissez à droite pour regarder. Visez un objet, puis touchez le bouton d’action.</p><button class="primary" id="start">${loaded?'Reprendre mon restaurant':'Commencer l’aventure'}</button><button class="secondary" id="welcomeHelp">Voir les commandes</button>`);$('start').onclick=()=>{resume();if(!storageOK)toast('Sauvegarde indisponible dans ce navigateur.');};$('welcomeHelp').onclick=showHelp;}
+function showWelcome(){modal(`<div class="eyebrow">SIMULATEUR DE RESTAURANT · V1.5</div><h1>Une adresse.<br>Votre histoire.</h1><p>Un local vide, quelques économies et votre premier service à inventer.</p><div class="tags"><span>3D · Première personne</span><span>Sauvegarde locale</span></div><p><b>Déplacez-vous à gauche.</b> Glissez à droite pour regarder. Visez un objet, puis touchez le bouton d’action.</p><button class="primary" id="start">${loaded?'Reprendre mon restaurant':'Commencer l’aventure'}</button><button class="secondary" id="welcomeHelp">Voir les commandes</button>`);$('start').onclick=()=>{resume();if(!storageOK)toast('Sauvegarde indisponible dans ce navigateur.');};$('welcomeHelp').onclick=showHelp;}
 function showHelp(){modal(`<div class="eyebrow">LE CARNET DU CHEF</div><h2>Votre premier service</h2><ol class="steps"><li>Achetez le local : <b>250 €</b>, sur la pancarte devant.</li><li>Entrez, puis ouvrez <b>Aménager</b>. Achetez chaque équipement et deux chaises.</li><li>Placez les chaises près de la table. Laissez des passages et la porte libres.</li><li>Ouvrez avec la pancarte. Prenez la commande du client.</li><li>Réfrigérateur → ingrédients. Plan de travail → préparer. Plaque → cuire. Plan de travail → dresser.</li><li>Servez le client, puis encaissez à la caisse après son repas.</li></ol><p>Un burger : <b>18 € + pourboire</b>. 6 portions offertes ; réassort de 6 portions à 18 €. Un service dure 4 minutes, puis finit après le départ des clients.</p><p>Mobile : joystick à gauche, vue à droite. Ordinateur : ZQSD / WASD / flèches, glisser la souris pour regarder, E pour agir, R pour pivoter. La pause arrête les clients et la cuisson.</p><button class="primary" id="back">C’est parti</button>`);$('back').onclick=resume;}
 function showShop(){if(!S.owned)return toast('Achetez d’abord le local sur la pancarte.');if(S.open||S.clients.length||S.closing)return toast('Aménagez entre deux journées, sans client.');if(job)return;buildMode=true;const st=setupState();const req=[['table',1],['chair',2],['till',1],['fridge',1],['prep',1],['stove',1]],done=req.filter(([t,n])=>st.counts[t]>=n).length;modal(`<div class="marketHead"><div><div class="eyebrow">MARKET</div><h2>Aménagement</h2></div><div class="marketMoney">${S.money} €</div></div><div class="marketStatus ${done===6?'ready':''}">${done===6?'✓ Restaurant prêt':done+'/6 équipements essentiels'}</div><div class="marketShop">${Object.entries(catalog).map(([type,d])=>{const count=S.furniture.filter(f=>f.type===type).length;return `<button class="marketItem" data-buy="${type}" ${S.money<d.price?'disabled':''}><span class="marketVisual">${marketIcon(type)}</span><span class="marketInfo"><b>${d.name}</b><small>${count} installé${count>1?'s':''}</small></span><em>${d.price} €</em></button>`;}).join('')}</div><div class="marketFooter"><button class="marketMove" id="arrange">Déplacer</button><button class="marketClose" id="shopClose">Fermer</button></div>`,'marketPanel');document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>beginPlacement(b.dataset.buy));$('arrange').onclick=resume;$('shopClose').onclick=()=>{buildMode=false;resume();};}
 function beginPlacement(type,id=null){const f=S.furniture.find(f=>f.id===id);placing={type,id,rot:f?.rot||0,x:f?.x||0,z:f?.z||0,valid:false};if(id)furnitureMeshes.get(id).visible=false;ghost=furnitureMesh({...placing,id:-1});ghost.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.transparent=true;m.material.opacity=.5;}});scene.add(ghost);$('placement').hidden=false;$('sell').hidden=!id;resume();}
