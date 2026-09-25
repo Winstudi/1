@@ -11,3 +11,305 @@
 .order strong{font-size:12px}.order small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:600px){#dayProgress{top:calc(55px + env(safe-area-inset-top,0px));right:14px;width:145px}#objective{max-width:min(310px,calc(100% - 28px));background:#173b35d8}#goal{line-height:1.32}#context{max-width:70vw;min-width:0}#target{font-size:12px}#act{padding:13px 19px;border-radius:14px}.setupGrid{grid-template-columns:1fr}.setupTitle{align-items:flex-start;flex-direction:column;gap:3px}}
 @media(max-height:500px){#dayProgress{top:58px;width:140px}#objective{max-width:280px}.setupCheck{margin:10px 0}.setupGrid{grid-template-columns:1fr 1fr;gap:5px}.setupGrid span{padding:5px 7px}}
+
+/* =========================================================
+   V1.2 — HUD iPhone paysage compact + Market aménagement
+   ========================================================= */
+:root{
+  --hud-safe-left: calc(env(safe-area-inset-left, 0px) + 14px);
+  --hud-safe-right: calc(env(safe-area-inset-right, 0px) + 12px);
+}
+
+/* HUD principal : volontairement beaucoup plus discret */
+header{
+  top:calc(env(safe-area-inset-top, 0px) + 8px);
+  left:auto;
+  right:var(--hud-safe-right);
+  padding:0;
+  justify-content:flex-end;
+  width:auto;
+}
+.pills{gap:4px}
+.pills>*{
+  padding:6px 8px;
+  border-radius:9px;
+  font-size:9px;
+  line-height:1;
+  min-height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.pills b{font-size:12px}
+.pills button{font-size:12px;min-width:30px}
+
+#objective{
+  top:calc(env(safe-area-inset-top, 0px) + 10px);
+  left:var(--hud-safe-left);
+  max-width:220px;
+  padding:4px 8px 5px 9px;
+  background:transparent;
+  border-left:2px solid #e7f2c4c9;
+  border-radius:0;
+  text-shadow:0 1px 5px #0b2727d9;
+}
+#objective small{
+  font-size:6px;
+  letter-spacing:1.15px;
+  color:#eef4d4;
+  opacity:.9;
+}
+#goal{
+  margin-top:2px;
+  font-size:9px;
+  line-height:1.25;
+  color:#fff;
+}
+#status{
+  top:calc(env(safe-area-inset-top, 0px) + 51px);
+  left:calc(var(--hud-safe-left) + 8px);
+  font-size:7px;
+  gap:4px;
+  opacity:.92;
+}
+#status i{width:5px;height:5px}
+
+#dayProgress{
+  top:calc(env(safe-area-inset-top, 0px) + 42px);
+  right:var(--hud-safe-right);
+  width:92px;
+  height:2px;
+}
+
+#orders{
+  top:calc(env(safe-area-inset-top, 0px) + 49px);
+  right:var(--hud-safe-right);
+  width:108px;
+}
+.order{
+  padding:6px 7px;
+  margin-bottom:4px;
+  border-radius:8px;
+  font-size:8px;
+  box-shadow:0 3px 12px #18352a17;
+}
+.order strong{font-size:8px;margin-bottom:3px}
+.order small{font-size:6.7px}
+.order .bar,.bar{height:2px;margin-top:4px}
+
+#crosshair{width:4px;height:4px;box-shadow:0 0 0 2px #fff3}
+#crosshair.active{box-shadow:0 0 0 3px #e7f2c43b;transform:scale(1.2)}
+#context{
+  bottom:calc(72px + env(safe-area-inset-bottom, 0px));
+  min-width:0;
+  max-width:48vw;
+}
+#target{
+  margin-bottom:4px;
+  font-size:8px;
+}
+#context.idle #target{font-size:7px}
+#act{
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:9px;
+  box-shadow:0 3px 14px #0926182c;
+}
+
+#joystick{
+  left:calc(env(safe-area-inset-left, 0px) + 12px);
+  bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  width:72px;
+  height:72px;
+  background:#ffffff13;
+}
+#joystick span{
+  left:21px;
+  top:21px;
+  width:28px;
+  height:28px;
+}
+nav{
+  right:var(--hud-safe-right);
+  bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  gap:0;
+}
+nav button{
+  width:48px;
+  height:44px;
+  border-radius:11px;
+  font-size:15px;
+}
+nav span{font-size:6.5px;margin-top:1px}
+#lookHint{
+  right:var(--hud-safe-right);
+  bottom:calc(65px + env(safe-area-inset-bottom, 0px));
+  font-size:5.5px;
+  letter-spacing:.9px;
+}
+#toast{
+  padding:9px 13px;
+  border-radius:10px;
+  font-size:9px;
+  max-width:65%;
+}
+#progress{
+  left:43%;
+  right:43%;
+  bottom:105px;
+  height:3px;
+}
+
+/* Placement : commandes plus petites */
+#placement{
+  bottom:calc(63px + env(safe-area-inset-bottom, 0px));
+}
+#placement span{
+  font-size:8px;
+  padding:5px 7px;
+  margin-bottom:5px;
+}
+#placement button{
+  padding:8px 10px;
+  border-radius:9px;
+  margin:0 2px;
+  font-size:8px;
+}
+
+/* Market aménagement : petit panneau type boutique mobile */
+#panel.marketPanel{
+  width:min(390px,72vw);
+  max-height:82dvh;
+  padding:13px;
+  border-radius:18px;
+  overflow:auto;
+  background:#f5f2e7;
+}
+.marketHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:7px;
+}
+.marketHead .eyebrow{font-size:6.5px!important;letter-spacing:1.4px!important}
+.marketHead h2{
+  margin:1px 0 0;
+  font-size:17px;
+  line-height:1;
+  letter-spacing:-.4px;
+}
+.marketMoney{
+  flex:none;
+  padding:6px 9px;
+  border-radius:9px;
+  background:#254c3d;
+  color:#eff7b2;
+  font-size:11px;
+  font-weight:800;
+}
+.marketMeta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  margin-bottom:8px;
+  font-size:7px;
+  color:#6b806f;
+}
+.marketMeta span{
+  padding:4px 6px;
+  background:#e6ebde;
+  border-radius:20px;
+}
+.marketMeta .ready{background:#dcebd2;color:#316246}
+.marketShop{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+.marketItem{
+  position:relative;
+  min-width:0;
+  padding:6px;
+  border:1px solid #d9e0d0;
+  border-radius:11px;
+  background:#e9ede2;
+  color:#274638;
+  text-align:left;
+  overflow:hidden;
+}
+.marketItem:active:not(:disabled){transform:scale(.98)}
+.marketItem:disabled{filter:saturate(.55);opacity:.48}
+.marketVisual{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:47px;
+  border-radius:8px;
+  background:linear-gradient(180deg,#f7f4e9,#dfe8d9);
+  margin-bottom:5px;
+  overflow:hidden;
+}
+.marketVisual svg{width:76px;height:50px;display:block}
+.marketInfo{display:block;min-width:0;padding-right:31px}
+.marketInfo b{
+  display:block;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:8px;
+  line-height:1.2;
+}
+.marketInfo small{
+  display:block;
+  margin-top:2px;
+  font-size:6.5px;
+  color:#738578;
+}
+.marketItem em{
+  position:absolute;
+  right:6px;
+  bottom:6px;
+  font-style:normal;
+  font-size:8px;
+  font-weight:850;
+  color:#254c3d;
+}
+.marketFooter{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+.marketFooter button{
+  flex:1;
+  padding:7px 8px;
+  border-radius:9px;
+  font-size:7.5px;
+  font-weight:700;
+}
+.marketMove{background:#254c3d;color:#f5f4d8}
+.marketClose{background:#e4e8de;color:#547060}
+
+/* Paysage iPhone : la zone caméra/Dynamic Island reste toujours libre. */
+@media (orientation:landscape) and (max-width:950px){
+  :root{
+    --hud-safe-left:calc(env(safe-area-inset-left, 0px) + 18px);
+    --hud-safe-right:calc(env(safe-area-inset-right, 0px) + 10px);
+  }
+  #objective{max-width:205px}
+  #orders{width:104px}
+  #panel.marketPanel{width:min(380px,68vw);padding:11px}
+  .marketVisual{height:43px}
+  .marketVisual svg{height:46px}
+}
+
+/* Portrait reste utilisable sans reprendre les anciennes grandes tailles. */
+@media (orientation:portrait) and (max-width:600px){
+  header{right:var(--hud-safe-right);padding:0}
+  #objective{left:var(--hud-safe-left);top:calc(env(safe-area-inset-top,0px) + 50px);max-width:190px}
+  #status{left:calc(var(--hud-safe-left) + 8px);top:calc(env(safe-area-inset-top,0px) + 96px)}
+  #orders{top:calc(env(safe-area-inset-top,0px) + 120px);width:105px}
+  #panel.marketPanel{width:min(360px,92vw)}
+  .marketShop{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
