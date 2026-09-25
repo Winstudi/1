@@ -313,3 +313,174 @@ nav span{font-size:6.5px;margin-top:1px}
   #panel.marketPanel{width:min(360px,92vw)}
   .marketShop{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* =========================================================
+   V1.2.1 — finition HUD + Market entièrement visible
+   ========================================================= */
+:root{
+  --hud-safe-left:calc(env(safe-area-inset-left, 0px) + 22px);
+}
+
+/* Objectif : un peu plus à droite et statut séparé du texte */
+#objective{
+  left:var(--hud-safe-left);
+  max-width:225px;
+}
+#status{
+  left:calc(var(--hud-safe-left) + 9px);
+  top:calc(env(safe-area-inset-top, 0px) + 64px);
+}
+
+/* Aide centrale : plus légère, puis le JS la masque après 6,5 s. */
+#context.idle #target{
+  font-size:6.5px;
+  font-weight:500;
+  letter-spacing:.15px;
+  opacity:.5;
+  text-shadow:0 1px 4px #0008;
+}
+
+/* Joystick environ 30 % plus petit et plus transparent */
+#joystick{
+  width:52px;
+  height:52px;
+  left:calc(env(safe-area-inset-left, 0px) + 10px);
+  bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+  background:#ffffff0c;
+  border-color:#ffffff52;
+}
+#joystick span{
+  left:16px;
+  top:16px;
+  width:19px;
+  height:19px;
+  background:#ffffffa8;
+  box-shadow:0 1px 8px #1233;
+}
+
+/* Aménager : plus discret */
+nav{
+  bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+}
+nav button{
+  width:38px;
+  height:36px;
+  border-radius:9px;
+  font-size:12px;
+  background:#173b35c7;
+}
+nav span{
+  font-size:5.4px;
+  margin-top:1px;
+}
+
+/* Market : tient entièrement dans un iPhone paysage, sans scroll vertical. */
+#panel.marketPanel{
+  width:min(356px,66vw);
+  max-height:calc(100dvh - 16px);
+  overflow:hidden;
+  padding:9px;
+  border-radius:15px;
+}
+.marketHead{
+  margin-bottom:5px;
+  min-height:29px;
+}
+.marketHead .eyebrow{
+  font-size:5.8px!important;
+  letter-spacing:1.2px!important;
+}
+.marketHead h2{
+  margin-top:0;
+  font-size:15px;
+  line-height:1;
+}
+.marketMoney{
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:9.5px;
+}
+.marketStatus{
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  margin:0 0 6px;
+  padding:4px 7px;
+  border-radius:20px;
+  background:#e6ebde;
+  color:#6b806f;
+  font-size:6.5px;
+}
+.marketStatus.ready{
+  background:#dcebd2;
+  color:#316246;
+  font-weight:700;
+}
+.marketMeta{display:none!important}
+.marketShop{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+}
+.marketItem{
+  height:86px;
+  padding:5px;
+  border-radius:10px;
+}
+.marketVisual{
+  height:36px;
+  margin-bottom:4px;
+  border-radius:7px;
+}
+.marketVisual svg{
+  width:66px;
+  height:39px;
+}
+.marketInfo{
+  min-width:0;
+  padding-right:28px;
+}
+.marketInfo b{
+  display:block;
+  min-height:16px;
+  font-size:7.2px;
+  line-height:1.08;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.marketInfo small{
+  margin-top:1px;
+  font-size:5.8px;
+  line-height:1;
+}
+.marketItem em{
+  right:5px;
+  bottom:5px;
+  font-size:7.2px;
+}
+.marketFooter{
+  gap:5px;
+  margin-top:6px;
+}
+.marketFooter button{
+  padding:6px 7px;
+  border-radius:8px;
+  font-size:6.8px;
+}
+
+@media (orientation:landscape) and (max-width:950px){
+  :root{
+    --hud-safe-left:calc(env(safe-area-inset-left, 0px) + 28px);
+  }
+  #objective{max-width:215px}
+  #status{top:calc(env(safe-area-inset-top, 0px) + 65px)}
+  #panel.marketPanel{
+    width:min(350px,65vw);
+    max-height:calc(100dvh - 14px);
+    padding:8px;
+  }
+  .marketItem{height:82px}
+  .marketVisual{height:34px}
+  .marketVisual svg{height:37px}
+  .marketFooter{margin-top:5px}
+}
